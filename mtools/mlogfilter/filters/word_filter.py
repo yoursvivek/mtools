@@ -1,9 +1,12 @@
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 from base_filter import BaseFilter
 
 
 class WordFilter(BaseFilter):
-    """ accepts only if line contains any of the words specified by --word 
+    """ accepts only if line contains any of the words specified by --word
     """
 
     filterArgs = [

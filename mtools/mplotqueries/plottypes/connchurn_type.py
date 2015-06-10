@@ -1,7 +1,10 @@
 from mtools.mplotqueries.plottypes.base_type import BasePlotType
 import argparse
 import types
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import numpy as np
 
 try:
@@ -70,7 +73,7 @@ class ConnectionChurnPlotType(BasePlotType):
 
         bins = np.linspace(xmin, xmax, n_bins)
 
-        n, bins, artists = axis.hist(x, bins=bins, align='mid', log=self.logscale, histtype="bar", color=color, 
+        n, bins, artists = axis.hist(x, bins=bins, align='mid', log=self.logscale, histtype="bar", color=color,
             edgecolor="white", alpha=0.8, picker=True, label="# connections %s per bin" % group)
 
         if group == 'closed':
@@ -79,11 +82,11 @@ class ConnectionChurnPlotType(BasePlotType):
                     height = a.get_height()
                     height = -height
                     a.set_height(height)
-                    if height < ymin: 
+                    if height < ymin:
                         ymin = height
-        
-            axis.set_ylim(bottom = ymin*1.1) 
-        
+
+            axis.set_ylim(bottom = ymin*1.1)
+
         elif group == 'opened':
             self.ymax = max([a.get_height() for a in artists])
 
@@ -103,18 +106,18 @@ class ConnectionChurnPlotType(BasePlotType):
 
         total = sorted(opened+closed, key=lambda le: le.datetime)
         x = date2num( [ logevent.datetime for logevent in total ] )
-        
+
         try:
             conns = [int(re.search(r'(\d+) connections? now open', le.line_str).group(1)) for le in total]
         except AttributeError:
             # hack, v2.0.x doesn't have this information
-            axis.set_ylim(top = self.ymax*1.1) 
-            return 
+            axis.set_ylim(top = self.ymax*1.1)
+            return
 
         axis.plot(x, conns, '-', color='black', linewidth=2, alpha=0.8, label='# open connections total')
 
         self.ymax = max(self.ymax, max(conns))
-        axis.set_ylim(top = self.ymax*1.1) 
+        axis.set_ylim(top = self.ymax*1.1)
 
 
     def plot(self, axis, ith_plot, total_plots, limits):

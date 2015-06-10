@@ -1,7 +1,10 @@
 from datetime import datetime
 from dateutil.tz import tzutc
 import dateutil.parser
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import json
 
 from mtools.util.pattern import json2pattern
@@ -369,7 +372,7 @@ class LogEvent(object):
         split_tokens = self.split_tokens
 
         if not self._datetime_nextpos:
-            # force evaluation of thread to get access to datetime_offset and to 
+            # force evaluation of thread to get access to datetime_offset and to
             # protect from changes due to line truncation
             _ = self.thread
 
@@ -384,9 +387,9 @@ class LogEvent(object):
                ("over max size") in self._line_str:
                self._datetime_nextpos = split_tokens.index('...')
                op = split_tokens[self._datetime_nextpos + 1]
-            else: 
+            else:
                 # unknown warning, bail out
-                return 
+                return
 
         if op in self.log_operations:
             self._operation = op
@@ -406,7 +409,7 @@ class LogEvent(object):
 
         return self._pattern
 
-    
+
     @property
     def sort_pattern(self):
         """ extract query pattern from operations """
@@ -423,12 +426,12 @@ class LogEvent(object):
     @property
     def command(self):
         """ extract query pattern from operations """
-        
+
         if not self._command_calculated:
 
             self._command_calculated = True
             if self.operation == 'command':
-                try: 
+                try:
                     command_idx = self.split_tokens.index('command:')
                     command = self.split_tokens[command_idx+1]
                     if command == '{':
@@ -767,10 +770,10 @@ class LogEvent(object):
 
             # sort pattern
             if 'orderby' in doc['query'] and isinstance(doc['query']['orderby'], dict):
-                self._sort_pattern = str(doc['query']['orderby']).replace("'", '"')    
+                self._sort_pattern = str(doc['query']['orderby']).replace("'", '"')
             elif '$orderby' in doc['query']:
                 self._sort_pattern = str(doc['query']['$orderby']).replace("'", '"')
-            else: 
+            else:
                 self._sort_pattern = None
 
         self._counters_calculated = True

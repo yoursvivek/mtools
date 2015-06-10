@@ -1,10 +1,13 @@
 from mtools.util.logevent import LogEvent
 from mtools.util.input_source import InputSource
 
-from math import ceil 
+from math import ceil
 from datetime import datetime
 import time
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import os
 
 class LogFile(InputSource):
@@ -14,7 +17,7 @@ class LogFile(InputSource):
         """ provide logfile as open file stream or stdin. """
         self.filehandle = filehandle
         self.name = filehandle.name
-        
+
         self.from_stdin = filehandle.name == "<stdin>"
         self._start = None
         self._end = None
@@ -30,14 +33,14 @@ class LogFile(InputSource):
         self._repl_set = None
         self._repl_set_members = None
         self._repl_set_version = None
-        
+
         self._storage_engine = None
-        
+
         self._datetime_format = None
         self._year_rollover = None
 
         self._has_level= None
-        
+
         # make sure bounds are calculated before starting to iterate, including potential year rollovers
         self._calculate_bounds()
 
@@ -172,7 +175,7 @@ class LogFile(InputSource):
         if not self._num_lines:
             self._iterate_lines()
         return self._storage_engine
-    
+
 
     def next(self):
         """ get next line, adjust for year rollover and hint datetime format. """
@@ -184,7 +187,7 @@ class LogFile(InputSource):
         line = line.rstrip('\n')
 
         le = LogEvent(line)
-        
+
         # hint format and nextpos from previous line
         if self._datetime_format and self._datetime_nextpos != None:
             ret = le.set_datetime_hint(self._datetime_format, self._datetime_nextpos, self.year_rollover)
@@ -195,14 +198,14 @@ class LogFile(InputSource):
         elif le.datetime:
             # gather new hint info from another logevent
             self._datetime_format = le.datetime_format
-            self._datetime_nextpos = le._datetime_nextpos  
+            self._datetime_nextpos = le._datetime_nextpos
 
         return le
 
     def __iter__(self):
         """ iteration over LogFile object will return a LogEvent object for each line (generator) """
         le = None
-        
+
         while True:
             try:
                 le = self.next()
@@ -215,7 +218,7 @@ class LogFile(InputSource):
                 # future iterations start from the beginning
                 if not self.from_stdin:
                     self.filehandle.seek(0)
-                
+
                 # now raise StopIteration exception
                 raise e
 
@@ -282,7 +285,7 @@ class LogFile(InputSource):
                     self._repl_set = match.group('replSet')
                     self._repl_set_members = match.group('replSetMembers')
                     self._repl_set_version = match.group('replSetVersion')
-    
+
             # if "is now in state" in line and next(state for state in states if line.endswith(state)):
             if "is now in state" in line:
                 tokens = line.split()
@@ -300,7 +303,7 @@ class LogFile(InputSource):
             if "[rsMgr] replSet" in line:
                 tokens = line.split()
                 if self._hostname:
-                    host = self._hostname + ':' + self._port 
+                    host = self._hostname + ':' + self._port
                 else:
                     host = os.path.basename(self.name)
                 host += ' (self)'
@@ -328,7 +331,7 @@ class LogFile(InputSource):
     def _check_for_restart(self, logevent):
         if logevent.thread == 'mongosMain' and 'MongoS' in logevent.line_str:
             self._binary = 'mongos'
-        
+
         elif logevent.thread == 'initandlisten' and "db version v" in logevent.line_str:
             self._binary = 'mongod'
 
@@ -336,7 +339,7 @@ class LogFile(InputSource):
             return False
 
         version = re.search(r'(\d\.\d\.\d+)', logevent.line_str)
-                
+
         if version:
             version = version.group(1)
             return version
@@ -347,10 +350,10 @@ class LogFile(InputSource):
     def _calculate_bounds(self):
         """ calculate beginning and end of logfile. """
 
-        if self.from_stdin: 
+        if self.from_stdin:
             return False
 
-        # get start datetime 
+        # get start datetime
         for line in self.filehandle:
             logevent = LogEvent(line)
             if logevent.datetime:
@@ -422,8 +425,8 @@ class LogFile(InputSource):
 
     def fast_forward(self, start_dt):
         """ Fast-forward a log file to the given start_dt datetime object using binary search.
-            Only fast for files. Streams need to be forwarded manually, and it will miss the 
-            first line that would otherwise match (as it consumes the log line). 
+            Only fast for files. Streams need to be forwarded manually, and it will miss the
+            first line that would otherwise match (as it consumes the log line).
         """
         if self.from_stdin:
             # skip lines until start_dt is reached
@@ -448,12 +451,12 @@ class LogFile(InputSource):
             # search for lower bound
             while abs(step_size) > 100:
                 step_size = ceil(step_size / 2.)
-                
+
                 self.filehandle.seek(step_size, 1)
                 le = self._find_curr_line()
                 if not le:
                     break
-                                
+
                 if le.datetime >= start_dt:
                     step_size = -abs(step_size)
                 else:

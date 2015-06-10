@@ -1,6 +1,9 @@
 import argparse
 import sys
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import signal
 import datetime
 import os
@@ -21,8 +24,8 @@ try:
 
     class InputSourceAction(argparse.FileType):
         """ This class extends the FileType class from the argparse module. It will try to open
-            the file and pass the handle to a new LogFile object, but if that's not possible it 
-            will catch the exception and interpret the string as a MongoDB URI and try to connect 
+            the file and pass the handle to a new LogFile object, but if that's not possible it
+            will catch the exception and interpret the string as a MongoDB URI and try to connect
             to the database. In that case, it will return a ProfileCollection object.
 
             Both derive from the same base class InputSource and support iteration over LogEvents.
@@ -34,7 +37,7 @@ try:
                 return LogFile(filehandle)
 
             except argparse.ArgumentTypeError as e:
-                # not a file, try open as MongoDB database 
+                # not a file, try open as MongoDB database
                 m = re.match('^(\w+)(?::(\d+))?(?:/([a-zA-Z0-9._-]+))?$', string)
                 if m:
                     host, port, namespace = m.groups()
@@ -68,7 +71,7 @@ class BaseCmdLineTool(object):
     """ Base class for any mtools command line tool. Adds --version flag and basic control flow. """
 
     def __init__(self):
-        """ Constructor. Any inheriting class should add a description to the argparser and extend 
+        """ Constructor. Any inheriting class should add a description to the argparser and extend
             it with additional arguments as needed.
         """
         # define argument parser and add version argument
@@ -76,11 +79,11 @@ class BaseCmdLineTool(object):
         self.argparser.add_argument('--version', action='version', version="mtools version %s" % __version__)
         self.argparser.add_argument('--no-progressbar', action='store_true', default=False, help='disables progress bar')
         self.is_stdin = not sys.stdin.isatty()
-        
+
 
     def run(self, arguments=None, get_unknowns=False):
-        """ Init point to execute the script. If `arguments` string is given, will evaluate the 
-            arguments, else evaluates sys.argv. Any inheriting class should extend the run method 
+        """ Init point to execute the script. If `arguments` string is given, will evaluate the
+            arguments, else evaluates sys.argv. Any inheriting class should extend the run method
             (but first calling BaseCmdLineTool.run(self)).
         """
         # redirect PIPE signal to quiet kill script, if not on Windows
@@ -101,7 +104,7 @@ class BaseCmdLineTool(object):
 
         self.progress_bar_enabled = not (self.args['no_progressbar'] or self.is_stdin)
 
-    
+
     def _datetime_to_epoch(self, dt):
         """ converts the datetime to unix epoch (properly). """
         if dt:
@@ -109,13 +112,13 @@ class BaseCmdLineTool(object):
             # don't use total_seconds(), that's only available in 2.7
             total_secs = int((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6)
             return total_secs
-        else: 
+        else:
             return 0
-    
+
     def update_progress(self, progress, prefix=''):
-        """ use this helper function to print a progress bar for longer-running scripts. 
-            The progress value is a value between 0.0 and 1.0. If a prefix is present, it 
-            will be printed before the progress bar. 
+        """ use this helper function to print a progress bar for longer-running scripts.
+            The progress value is a value between 0.0 and 1.0. If a prefix is present, it
+            will be printed before the progress bar.
         """
         total_length = 40
 
@@ -151,10 +154,10 @@ class LogFileTool(BaseCmdLineTool):
         if self.is_stdin:
             if not self.stdin_allowed:
                 raise SystemExit("this tool can't parse input from stdin.")
-                
+
             arg_opts['const'] = LogFile(sys.stdin)
             arg_opts['action'] = 'store_const'
-            if 'type' in arg_opts: 
+            if 'type' in arg_opts:
                 del arg_opts['type']
             if 'nargs' in arg_opts:
                 del arg_opts['nargs']

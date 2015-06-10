@@ -1,5 +1,8 @@
 from mtools.util import OrderedDict
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 class Grouping(object):
 
@@ -16,7 +19,7 @@ class Grouping(object):
         """ General purpose class to group items by certain criteria. """
 
         key = None
-        
+
         if not group_by:
             group_by = self.group_by
 
@@ -39,9 +42,9 @@ class Grouping(object):
                             key = match.group(1)
                         else:
                             key = match.group()
-            
+
         self.groups.setdefault(key, list()).append(item)
-        
+
 
     def __getitem__(self, key):
         return self.groups[key]
@@ -78,7 +81,7 @@ class Grouping(object):
     def move_items(self, from_group, to_group):
         """ will take all elements from the from_group and add it to the to_group. """
         if from_group not in self.keys() or len(self.groups[from_group]) == 0:
-            return 
+            return
 
         self.groups.setdefault(to_group, list()).extend(self.groups.get(from_group, list()))
         if from_group in self.groups:
@@ -86,7 +89,7 @@ class Grouping(object):
 
 
     def sort_by_size(self, group_limit=None, discard_others=False, others_label='others'):
-        """ sorts the groups by the number of elements they contain, descending. Also has option to 
+        """ sorts the groups by the number of elements they contain, descending. Also has option to
             limit the number of groups. If this option is chosen, the remaining elements are placed
             into another group with the name specified with others_label. if discard_others is True,
             the others group is removed instead.

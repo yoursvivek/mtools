@@ -11,7 +11,10 @@ from datetime import timedelta, datetime
 from dateutil import parser
 import os
 import sys
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import json
 
 

@@ -1,4 +1,7 @@
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import json
 
 def _decode_pattern_list(data):
@@ -66,7 +69,7 @@ def json2pattern(s):
     s = shell2json(s)
     # # convert values to 1 where possible, to get rid of things like new Date(...)
     s, n = re.subn(r'([:,\[])\s*([^{}\[\]"]+?)\s*([,}\]])', '\\1 1 \\3', s)
-    # now convert to dictionary, converting unicode to ascii 
+    # now convert to dictionary, converting unicode to ascii
     try:
         doc = json.loads(s, object_hook=_decode_pattern_dict)
         return json.dumps(doc, sort_keys=True, separators=(', ', ': ') )
@@ -75,7 +78,7 @@ def json2pattern(s):
 
 
 if __name__ == '__main__':
-    
+
     s = '{d: {$gt: 2, $lt: 4}, b: {$gte: 3}, c: {$nin: [1, "foo", "bar"]}, "$or": [{a:1}, {b:1}] }'
     print json2pattern(s)
 

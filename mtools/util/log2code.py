@@ -1,6 +1,9 @@
 import cPickle
 import os
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import sys
 import argparse
 from collections import defaultdict
@@ -12,7 +15,7 @@ import mtools
 
 def import_l2c_db():
     """ static import helper function, checks if the log2code.pickle exists first, otherwise
-        raises ImportError. 
+        raises ImportError.
     """
     data_path = os.path.join(os.path.dirname(mtools.__file__), 'data')
     if os.path.exists(os.path.join(data_path, 'log2code.pickle')):
@@ -29,7 +32,7 @@ class Log2CodeConverter(object):
 
     # static import of logdb data structures
     all_versions, log_version, logs_by_word, log_code_lines = import_l2c_db()
-        
+
     def _log2code(self, line):
         tokens = re.split(r'[\s"]', line)
 
@@ -46,7 +49,7 @@ class Log2CodeConverter(object):
                     coverage.append(cov)
                 else:
                     coverage.append(0)
-            
+
             best_cov = max(coverage)
             if not best_cov:
                 continue
@@ -63,12 +66,12 @@ class Log2CodeConverter(object):
                 #     # duration = time.time() - start_time
                 #     # print duration
                 #     continue
-        
+
             best_match = self.logs_by_word[word][coverage.index(best_cov)]
             return self.log_code_lines[best_match]
 
     def _strip_counters(self, sub_line):
-        """ finds the ending part of the codeline by 
+        """ finds the ending part of the codeline by
             taking out the counters and durations
         """
         try:
@@ -94,7 +97,7 @@ class Log2CodeConverter(object):
 
 
     def _find_variable(self, pattern, logline):
-        """ return the variable parts of the code 
+        """ return the variable parts of the code
             given a tuple of strings pattern
             ie. (this, is, a, pattern) -> 'this is a good pattern' -> [good]
         """
@@ -111,7 +114,7 @@ class Log2CodeConverter(object):
             # extract whats in the middle of the two substrings
             between = re.search(pat, logline)
             try:
-                # add what's in between if the search isn't none 
+                # add what's in between if the search isn't none
                 var_subs.append(between.group(1))
             except Exception, e:
                 pass
@@ -127,7 +130,7 @@ class Log2CodeConverter(object):
         return var_subs
 
     def _variable_parts(self, line, codeline):
-        """returns the variable parts of the codeline, 
+        """returns the variable parts of the codeline,
             given the static parts
         """
         var_subs = []
@@ -154,7 +157,7 @@ class Log2CodeConverter(object):
 
     def combine(self, pattern, variable):
         """ combines a pattern and variable parts to be a line string again. """
-        
+
         inter_zip= izip_longest(variable, pattern, fillvalue='')
         interleaved = [elt for pair in inter_zip for elt in pair ]
         return ''.join(interleaved)
@@ -192,7 +195,7 @@ class Log2CodeConverter(object):
 #         else:
 #             logfile = sys.stdin
 
-#         for i, line in enumerate(logfile): 
+#         for i, line in enumerate(logfile):
 #             match = self.log2code(line)
 
 #             if  match:
@@ -219,11 +222,11 @@ class Log2CodeConverter(object):
 #                 coverage.append(cov)
 #             else:
 #                 coverage.append(0)
-        
+
 #         best_cov = max(coverage)
 #         if not best_cov:
 #             return None
-        
+
 #         best_match = self.logs_by_word[word][coverage.index(best_cov)]
 #         return best_match
 

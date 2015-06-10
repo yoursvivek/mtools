@@ -2,7 +2,10 @@ from mtools.util import OrderedDict
 from mtools.util.log2code import Log2CodeConverter
 from mtools.util.grouping import Grouping
 
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 from datetime import MINYEAR, MAXYEAR, datetime, timedelta
 from dateutil.tz import tzutc
 import types
@@ -14,7 +17,7 @@ except ImportError:
 
 class BasePlotType(object):
 
-    # 14 most distinguishable colors, according to 
+    # 14 most distinguishable colors, according to
     # http://stackoverflow.com/questions/309149/generate-distinctly-different-rgb-colors-in-graphs
     colors = ['#000000','#00FF00','#0000FF','#FF0000','#01FFFE','#FFA6FE','#FFDB66','#006401', \
               '#010067','#95003A','#007DB5','#FF00F6','#FFEEE8','#774D00']
@@ -50,7 +53,7 @@ class BasePlotType(object):
         self.empty = False
         self.groups.setdefault(key, list()).append(logevent)
 
-    @property 
+    @property
     def logevents(self):
         """ iterator yielding all logevents from groups dictionary. """
         for key in self.groups:

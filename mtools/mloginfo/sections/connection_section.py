@@ -1,17 +1,20 @@
 from base_section import BaseSection
 from collections import defaultdict
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 
-try: 
+try:
     from mtools.util.profile_collection import ProfileCollection
 except ImportError:
     ProfileCollection = None
-    
+
 class ConnectionSection(BaseSection):
-    """ This section goes through the logfile and extracts information 
+    """ This section goes through the logfile and extracts information
         about opened and closed connections.
     """
-    
+
     name = "connections"
 
     def __init__(self, mloginfo):

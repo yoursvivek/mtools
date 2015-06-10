@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import argparse
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import os
 import sys
 import uuid
@@ -56,8 +59,8 @@ class MPlotQueriesTool(LogFileTool):
         # main parser arguments
         self.argparser.add_argument('--logscale', action='store_true', help='plot y-axis in logarithmic scale (default=off)')
         self.argparser.add_argument('--overlay', action='store', nargs='?', default=None, const='add', choices=['add', 'list', 'reset'], help="create combinations of several plots. Use '--overlay' to create an overlay (this will not plot anything). The first call without '--overlay' will additionally plot all existing overlays. Use '--overlay reset' to clear all overlays.")
-        self.argparser.add_argument('--type', action='store', default='scatter', choices=self.plot_types.keys(), help='type of plot (default=scatter with --yaxis duration).')        
-        self.argparser.add_argument('--title', action='store', default=None, help='change the title of the plot (default=filename(s))')        
+        self.argparser.add_argument('--type', action='store', default='scatter', choices=self.plot_types.keys(), help='type of plot (default=scatter with --yaxis duration).')
+        self.argparser.add_argument('--title', action='store', default=None, help='change the title of the plot (default=filename(s))')
         self.argparser.add_argument('--group', help="specify value to group on. Possible values depend on type of plot. All basic plot types can group on 'namespace', 'operation', 'thread', 'pattern', range and histogram plots can additionally group on 'log2code'. The group can also be a regular expression.")
         self.argparser.add_argument('--group-limit', metavar='N', type=int, default=None, help="specify an upper limit of the number of groups. Groups are sorted by number of data points. If limit is specified, only the top N will be listed separately, the rest are grouped together in an 'others' group")
         self.argparser.add_argument('--no-others', action='store_true', default=False, help="if this flag is used, the 'others' group (see --group-limit) will be discarded.")
@@ -90,7 +93,7 @@ class MPlotQueriesTool(LogFileTool):
         # if no plot is specified (either pipe or filename(s)) and reset, quit now
         if not plot_specified and self.args['overlay'] == 'reset':
             raise SystemExit
-        
+
         if self.args['overlay'] == "" or self.args['overlay'] == "add":
             if plot_specified:
                 self.save_overlay()
@@ -100,7 +103,7 @@ class MPlotQueriesTool(LogFileTool):
 
         # else plot (with potential overlays) if there is something to plot
         overlay_loaded = self.load_overlays()
-        
+
         if plot_specified or overlay_loaded:
             self.plot()
         else:
@@ -116,16 +119,16 @@ class MPlotQueriesTool(LogFileTool):
             self.logfiles = [self.args['logfile']]
         else:
             self.logfiles = self.args['logfile']
-            
+
         if len(self.logfiles) > 1:
             # force "logfile" to be the group key for multiple files
             multiple_files = True
             self.args['group'] = 'filename'
-        
+
         self.plot_instance = self.plot_types[self.args['type']](args=self.args, unknown_args=self.unknown_args)
 
         for logfile in self.logfiles:
-            
+
             # get log file information
             if self.progress_bar_enabled:
                 if logfile.start and logfile.end:
@@ -135,7 +138,7 @@ class MPlotQueriesTool(LogFileTool):
                     self.progress_bar_enabled = False
                     progress_start = 0
                     progress_total = 1
-                
+
                 if progress_total == 0:
                     # protect from division by zero errors
                     self.progress_bar_enabled = False
@@ -145,7 +148,7 @@ class MPlotQueriesTool(LogFileTool):
                 # adjust times if --optime-start is enabled
                 if self.args['optime_start'] and logevent.duration != None and logevent.datetime:
                     # create new variable end_datetime in logevent object and store starttime there
-                    logevent.end_datetime = logevent.datetime 
+                    logevent.end_datetime = logevent.datetime
                     logevent._datetime = logevent._datetime - timedelta(milliseconds=logevent.duration)
                     logevent._datetime_calculated = True
 
@@ -156,11 +159,11 @@ class MPlotQueriesTool(LogFileTool):
 
                 # offer plot_instance and see if it can plot it
                 if self.plot_instance.accept_line(logevent):
-                    
+
                     # if logevent doesn't have datetime, skip
                     if logevent.datetime == None:
                         continue
-                    
+
                     if logevent.namespace == None:
                         logevent._namespace = "None"
 
@@ -188,7 +191,7 @@ class MPlotQueriesTool(LogFileTool):
         for plot_inst in self.plot_instances:
             plot_inst.group()
 
-    
+
     def list_overlays(self):
         target_path = os.path.join(self.home_path, self.mtools_path, self.overlay_path)
         if not os.path.exists(target_path):
@@ -244,9 +247,9 @@ class MPlotQueriesTool(LogFileTool):
             self.plot_instances.extend(overlay)
             # for key in group_dict:
             #     self.groups.setdefault(key, list()).extend(group_dict[key])
-            
+
             print "Loaded overlay: %s" % os.path.basename(f)
-        
+
         if len(target_files) > 0:
             print
 
@@ -268,7 +271,7 @@ class MPlotQueriesTool(LogFileTool):
                 continue
 
         if len(target_files) > 0:
-            print "Deleted overlays."          
+            print "Deleted overlays."
 
 
     def print_shortcuts(self, scatter=False):
@@ -299,7 +302,7 @@ class MPlotQueriesTool(LogFileTool):
     def onpick(self, event):
         """ this method is called per artist (group), with possibly
             a list of indices.
-        """   
+        """
         if hasattr(event.artist, '_mt_legend_item'):
             # legend item, instead of data point
             idx = event.artist._mt_legend_item
@@ -556,7 +559,7 @@ class MPlotQueriesTool(LogFileTool):
         axis.set_xticklabels(axis.get_xticks(), rotation=90, fontsize=9)
         axis.xaxis.set_major_locator(locator)
         axis.xaxis.set_major_formatter(formatter)
-            
+
         axis.set_xlim(date2num([xlim_min, xlim_max]))
 
         # ylabel for y axis
@@ -571,13 +574,13 @@ class MPlotQueriesTool(LogFileTool):
 
         handles, labels = axis.get_legend_handles_labels()
         if len(labels) > 0:
-            # only change fontsize if supported 
+            # only change fontsize if supported
             major, minor, _ = mpl_version.split('.')
             if (int(major), int(minor)) >= (1, 3):
                 self.legend = axis.legend(loc='upper left', frameon=False, numpoints=1, fontsize=9)
             else:
                 self.legend = axis.legend(loc='upper left', frameon=False, numpoints=1)
-        
+
         if self.args['type'] == 'scatter':
             # enable legend picking for scatter plots
             for i, legend_line in enumerate(self.legend.get_lines()):

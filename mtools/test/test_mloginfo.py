@@ -11,7 +11,10 @@ from datetime import timedelta, datetime
 from dateutil import parser
 import os
 import sys
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 def random_date(start, end):
     """ This function will return a random datetime between two datetime objects. """
@@ -157,14 +160,14 @@ class TestMLogInfo(object):
         expected = 13
         self._test_rsstate(self.logfile_path, pattern, expected)
 
-    
+
     def test_rsstate_26(self):
         logfile_path = os.path.join(os.path.dirname(mtools.__file__), 'test/logfiles/', 'mongod_26.log')
         pattern = r'^Apr 09'
         expected = 17
         self._test_rsstate(logfile_path, pattern, expected)
 
-    
+
     def test_rsstate_mongos(self):
         # different log file
         logfile_path = os.path.join(os.path.dirname(mtools.__file__), 'test/logfiles/', 'mongos.log')
@@ -172,7 +175,7 @@ class TestMLogInfo(object):
         expected = 1
         self._test_rsstate(logfile_path, pattern, expected)
 
-    
+
     def _test_rsstate(self, logfile_path, pattern, expected):
         """ utility test runner for rsstate
         """
@@ -186,7 +189,7 @@ class TestMLogInfo(object):
                                                 'rs version':'unknown',
                                                 'rs members':'[ { host: "capslock.local:27017", _id: 0 }, { host: "capslock.local:27018", _id: 1 }, { host: "capslock.local:27019", _id: 2, arbiterOnly: true } ]'})
 
-    
+
     def test_rsstate_26(self):
         logfile_path = os.path.join(os.path.dirname(mtools.__file__), 'test/logfiles/', 'mongod_26.log')
         self._test_rsinfo(logfile_path,
@@ -194,7 +197,7 @@ class TestMLogInfo(object):
                              'rs version':'1',
                              'rs members':'[ { _id: 0, host: "enter.local:27019" }, { _id: 1, host: "enter.local:27020" }, { _id: 2, host: "enter.local:27021" } ]'})
 
-    
+
     def test_rsstate_24(self):
         logfile_path = os.path.join(os.path.dirname(mtools.__file__), 'test/logfiles/', 'mongod-2411.log')
         self._test_rsinfo(logfile_path,
@@ -202,12 +205,12 @@ class TestMLogInfo(object):
                              'rs version':'unknown',
                              'rs members':'[ { host: "hostname.local:37018", _id: 0, votes: 1 }, { host: "hostname.local:37019", _id: 1, votes: 1 }, { host: "hostname.local:37020", _id: 2, arbiterOnly: true } ]'})
 
-    
+
     def test_rsstate_mongos(self):
         logfile_path = os.path.join(os.path.dirname(mtools.__file__), 'test/logfiles/', 'mongos.log')
         self._test_rsinfo(logfile_path,**{'rs name':None, 'rs version':None,'rs members':None})
 
-    
+
     def _test_rsinfo(self, logfile_path, **expected):
         """ utility test runner for rsstate
         """
@@ -217,7 +220,7 @@ class TestMLogInfo(object):
         for key, value in expected.iteritems():
             print "results[",key,"] == " , value
             assert results.get(key) == value
-        
+
     def _parse_output(self, output):
         results = {}
         for line in output.splitlines():

@@ -1,5 +1,8 @@
 import os
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import sys
 import commands
 import subprocess
@@ -26,17 +29,17 @@ def source_files(mongodb_path):
                 yield os.path.join(root, filename)
 
 def get_all_versions():
-    pr = subprocess.Popen(git_path + " checkout master", 
-                          cwd = mongodb_path, 
-                          shell = True, 
-                          stdout = subprocess.PIPE, 
+    pr = subprocess.Popen(git_path + " checkout master",
+                          cwd = mongodb_path,
+                          shell = True,
+                          stdout = subprocess.PIPE,
                           stderr = subprocess.PIPE)
     pr.communicate()
 
-    pr = subprocess.Popen(git_path + " tag", 
-                          cwd = mongodb_path, 
-                          shell = True, 
-                          stdout = subprocess.PIPE, 
+    pr = subprocess.Popen(git_path + " tag",
+                          cwd = mongodb_path,
+                          shell = True,
+                          stdout = subprocess.PIPE,
                           stderr = subprocess.PIPE)
 
     (out, error) = pr.communicate()
@@ -58,10 +61,10 @@ def get_all_versions():
 
 
 def switch_version(version):
-    pr = subprocess.Popen(git_path + " checkout %s"%version, 
-                          cwd = os.path.dirname( mongodb_path ), 
-                          shell = True, 
-                          stdout = subprocess.PIPE, 
+    pr = subprocess.Popen(git_path + " checkout %s"%version,
+                          cwd = os.path.dirname( mongodb_path ),
+                          shell = True,
+                          stdout = subprocess.PIPE,
                           stderr = subprocess.PIPE)
 
     (out, error) = pr.communicate()
@@ -76,7 +79,7 @@ def output_verbose(version, filename, lineno, line, statement, matches, accepted
     print "%10s %s"       % ("accepted:", accepted)
     print "%10s %s"       % ("reason:", why)
     print "----------------------------"
-    print 
+    print
 
 
 def extract_logs(log_code_lines, current_version):
@@ -93,7 +96,7 @@ def extract_logs(log_code_lines, current_version):
         lines = f.readlines()
         for lineno, line in enumerate(lines):
             trigger = next((t for t in log_triggers if t in line), None)
-            
+
             if trigger:
                 # extend line to wrap over line breaks until ; at end of line is encountered
                 statement = line
@@ -156,7 +159,7 @@ def extract_logs(log_code_lines, current_version):
                 # print matches
 
                 # # remove tabs, double quotes and newlines and strip whitespace from matches
-                # matches = [re.sub(r'(\\t)|(\\n)|"', '', m).strip() for m in matches]    
+                # matches = [re.sub(r'(\\t)|(\\n)|"', '', m).strip() for m in matches]
                 # print matches
 
                 # remove empty tokens
@@ -276,7 +279,7 @@ if __name__ == '__main__':
                     'loglevel': occ[2],
                     'trigger': occ[3]
                 })
-        
+
         if write_to_db:
             mc['log2code']['instances'].update({'pattern': instance['pattern']}, instance, upsert=True)
 

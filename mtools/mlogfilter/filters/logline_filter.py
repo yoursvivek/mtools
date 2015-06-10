@@ -1,61 +1,64 @@
 from mtools.util.logevent import LogEvent
 from mtools.util.pattern import json2pattern
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 from base_filter import BaseFilter
 
 def custom_parse_array(value):
     return list(set(value.split()))
 
 class LogLineFilter(BaseFilter):
-    """ 
+    """
     """
     filterArgs = [
         ('--component', {
-            'action':'store', 
-            'nargs':'*', 
+            'action':'store',
+            'nargs':'*',
             'choices': LogEvent.log_components,
-            'metavar':'CM', 
+            'metavar':'CM',
             'help':'only output log lines with component CM (multiple values are allowed).'
         }),
         ('--level',     {
-            'action':'store', 
-            'nargs':'*', 
-            'metavar':'LL', 
-            'choices': LogEvent.log_levels, 
+            'action':'store',
+            'nargs':'*',
+            'metavar':'LL',
+            'choices': LogEvent.log_levels,
             'help':'only output log lines with loglevel LL (multiple values are allowed).'
         }),
         ('--namespace', {
-            'action':'store', 
-            'nargs':'*', 
-            'metavar':'NS', 
+            'action':'store',
+            'nargs':'*',
+            'metavar':'NS',
             'help':'only output log lines on namespace NS (multiple values are allowed).'
         }),
         ('--operation', {
-            'action':'store', 
-            'nargs':'*', 
-            'metavar':'OP', 
-            'choices': LogEvent.log_operations, 
+            'action':'store',
+            'nargs':'*',
+            'metavar':'OP',
+            'choices': LogEvent.log_operations,
             'help':'only output log lines of type OP (multiple values are allowed).'
         }),
         ('--thread', {
-            'nargs':'*', 
-            'action':'store', 
+            'nargs':'*',
+            'action':'store',
             'help':'only output log lines of thread THREAD (multiple values are allowed).'
         }),
         ('--pattern', {
-            'action':'store', 
+            'action':'store',
             'help':'only output log lines with a query pattern PATTERN' \
                    ' (only applies to queries, getmores, updates, removes).'
         }),
         ('--command', {
-            'nargs':'*', 
-            'action':'store', 
+            'nargs':'*',
+            'action':'store',
             'help':'only output log lines which are commands of the given type. Examples: "distinct", "isMaster", "replSetGetStatus" (multiple values are allowed).'
         }),
         ('--planSummary', {
-            'nargs':'*', 
+            'nargs':'*',
             'metavar': 'PS',
-            'action':'store', 
+            'action':'store',
             'help':'only output log lines which match the given plan summary values (multiple values are allowed).'
         })
     ]
@@ -86,7 +89,7 @@ class LogLineFilter(BaseFilter):
             self.active = True
         if 'command' in self.mlogfilter.args and self.mlogfilter.args['command']:
             self.commands = custom_parse_array(self.mlogfilter.args['command'])
-            self.active = True    
+            self.active = True
         if 'thread' in self.mlogfilter.args and self.mlogfilter.args['thread']:
             self.threads = custom_parse_array(self.mlogfilter.args['thread'])
             self.active = True
@@ -117,5 +120,5 @@ class LogLineFilter(BaseFilter):
             return False
         if self.planSummaries and logevent.planSummary not in self.planSummaries:
             return False
-        
+
         return True
